@@ -113,36 +113,28 @@ def gather_data_from_text_file(filename, average_lengths, overall_lengths):
 
 lengths_list_words, lengths_list_chars, overall_lengths_list_words, overall_lengths_list_chars = gather_data_from_text_file('title_lengths2.txt', avg1, avg2)
 
-def visualize_title_lengths_words(sources, mediums, lengths_list_words, lengths_list_chars, overall_lengths_list_words, overall_lengths_list_chars):
+def visualize_title_lengths_words(mediums, overall_lengths_list_words, overall_lengths_list_chars):
 
     # Create bar charts for the data
     plt.figure(1, figsize=(12, 6))
-    plt.title('Average Book Title Length (Words) By Data Source')
-    plt.bar(sources, lengths_list_words, color=['blue', 'red', 'pink', 'green'])
-    plt.xlabel('Data Source')
-    plt.ylabel('Average Title Length (Words)')
-
-    plt.figure(2, figsize=(12, 6))
-    plt.title('Average Book Title Length (Characters) By Data Source')
-    plt.bar(sources, lengths_list_chars, color=['blue', 'red', 'pink', 'green'])
-    plt.xlabel('Data Source')
-    plt.ylabel('Average Title Length (Characters)')
-
-    plt.figure(3, figsize=(12, 6))
-    plt.title('Average Book Title Length (Words) By Art Medium')
+    plt.title('Average Object Title Length (in Words) By Art Medium')
     plt.bar(mediums, overall_lengths_list_words, color=['blue', 'red'])
     plt.xlabel('Data Source')
-    plt.ylabel('Average Title Length (Characters)')
-    plt.show()
+    plt.ylabel('Average Title Length (in Characters)')
+    plt.savefig("title_word_lengths_by_medium.png")
     
-    plt.figure(4, figsize=(12, 6))
-    plt.title('Average Book Title Length (Characters) By Art Medium')
+    plt.figure(2, figsize=(12, 6))
+    plt.title('Average Object Title Length (in Characters) By Art Medium')
     plt.bar(mediums, overall_lengths_list_chars, color=['blue', 'red'])
     plt.xlabel('Art Medium')
-    plt.ylabel('Average Title Length (Characters)')
+    plt.ylabel('Average Title Length (in Characters)')
+    
+    plt.savefig("title_character_lengths_by_medium.png")
     plt.show()
+    
+    
 
-visualize_title_lengths_words(['Open_Library', 'Met', 'Harvard', 'Cleveland'], ['Books', 'Paintings'], lengths_list_words, lengths_list_chars, overall_lengths_list_words, overall_lengths_list_chars)
+visualize_title_lengths_words(['Books', 'Paintings'], overall_lengths_list_words, overall_lengths_list_chars)
 def main():
     table_names = ['Open_Library', 'Met', 'Harvard']
     mediums = ['Books', 'Paintings']
