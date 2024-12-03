@@ -46,19 +46,10 @@ def create_Cleveland_table(cur, conn):
     cur.execute("CREATE TABLE IF NOT EXISTS Cleveland (id_key INTEGER PRIMARY KEY, title TEXT UNIQUE, creation_year INTEGER, artist_id INTEGER, department_id INTEGER)")
     return None
 
-def create_Cleveland_Artist_table(cur, conn):
-    a_list = []
-    for painting in get_paintings(823):
-        if painting['creators']:
-            artist = re.findall(r'[\.\w\s-]+', painting['creators'][0]['description'])[0].strip()
-            if artist not in a_list:
-                a_list.append(artist)
-            
+def create_Cleveland_Artist_table(cur, conn):   
     # create table if it doesn't exist (change name of table depending on museum name)
     # includes id, artist
     cur.execute("CREATE TABLE IF NOT EXISTS Cleveland_Artists (id INTEGER PRIMARY KEY, artist TEXT UNIQUE)")
-    for i in range(len(a_list)):
-        cur.execute("INSERT OR IGNORE INTO Cleveland_Artists (id, artist) VALUES (?, ?)", (i, a_list[i]))
     conn.commit()
     return None
         
@@ -104,7 +95,12 @@ def insert_paintings_into_Cleveland(paintings, cur, conn):
         # if empty -> NULL
         if painting['creators']:
             cur.execute("SELECT id FROM Cleveland_Artists WHERE artist = ?", (re.findall(r'[\.\w\s-]+', painting['creators'][0]['description'])[0].strip(),))
-            artist_id = cur.fetchone()[0]
+            result = cur.fetchone()
+            if result:
+                artist_id = result[0]
+            else:
+                cur.execute("INSERT INTO Cleveland_Artists (artist) VALUES (?)", (re.findall(r'[\.\w\s-]+', painting['creators'][0]['description'])[0].strip(),))
+                artist_id = cur.lastrowid
         else:
             artist_id = None
         
