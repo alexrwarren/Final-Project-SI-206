@@ -10,45 +10,71 @@ def get_data(database):
 
     cur.execute("""
         SELECT creation_year, height_cm FROM Harvard
-        WHERE height_cm IS NOT NULL
+        WHERE creation_year IS NOT NULL
+        AND height_cm IS NOT NULL
     """)
     data = cur.fetchall()
     conn.close()
     return data
 
 def calculate_average_height(data):
-    height_dist = {'1800-1850': 0, '1851-1900': 0, '1901-1950': 0, '1951-2000': 0, '2000-2050': 0}
+    height_dist = {}
 
+    early_eighteen_count = 0
+    late_eighteen_count = 0
+    early_nineteen_count = 0
+    late_nineteen_count = 0
+    early_2000s_count = 0
+    
     for creation_year, height_cm in data:
         if 1800 <= creation_year <= 1851:
+            if '1800-1850' not in height_dist:
+                height_dist['1800-1850']  = 0
             height_dist['1800-1850'] += height_cm
-        elif 1851 <= creation_year <= 1900:
-            height_dist['1851-1900'] += height_cm
-        elif 1901 <= creation_year <= 1950:
-            height_dist['1901-1950'] += height_cm
-        elif 1951 <= creation_year <= 2000:
-            height_dist['1951-2000'] += height_cm
-        else:
-            height_dist['2000-2050'] += height_cm
+            early_eighteen_count += 1
 
+        elif 1851 <= creation_year <= 1900:
+            if '1851-1900' not in height_dist:
+                height_dist['1851-1900']  = 0
+            height_dist['1851-1900'] += height_cm
+            late_eighteen_count += 1
+
+        elif 1901 <= creation_year <= 1950:
+            if '1901-1950' not in height_dist:
+                height_dist['1901-1950']  = 0
+            height_dist['1901-1950'] += height_cm
+            early_nineteen_count += 1
+
+        elif 1951 <= creation_year <= 2000:
+            if '1951-2000' not in height_dist:
+                height_dist['1951-2000']  = 0
+            height_dist['1951-2000'] += height_cm
+            late_nineteen_count += 1
+
+        elif 1951 <= creation_year <= 2000:
+            if '2000-2050' not in height_dist:
+                height_dist['2000-2050']  = 0
+            height_dist['2000-2050'] += height_cm
+            early_2000s_count += 1
+
+        count_lst = [early_eighteen_count, late_eighteen_count, early_nineteen_count, late_nineteen_count, early_2000s_count]
+
+    index = 0
     for key in height_dist:
-        height_dist[key] = np.mean(height_dist[key])
+        average = (height_dist[key]) / (count_lst[index])
+        height_dist[key] = average
+        index += 1
 
     return height_dist
 
 def plot_average_height(dist):
-    early_eighteen = dist[0]
-    late_eighteen = dist[1]
-    early_nineteen = dist[2]
-    late_nineteen = dist[3]
-    early_2000s = dist[4]
 
     plt.figure(figsize= 10)
-    plt.bar(early_eighteen, label = "1800-1850s", color = 'red')
-    plt.bar(late_eighteen, label = "1851-1900s", color = 'orange')
-    plt.bar(early_nineteen, label = "1901-1950s", color = 'yellow')
-    plt.bar(late_nineteen, label = "1951-2000s", color = 'green')
-    plt.bar(early_2000s, label = "2000-2050s", color = 'blue')
+
+    time_periods = list(dist.keys())
+    averages = list(dist.values())
+
+    plt.bar(time_periods, averages, color = ['red', 'orange', 'yellow', 'green', 'blue'])
 
     plt.xlabel('Time Periods')
     plt.ylabel('Painting Height in cm')
@@ -59,10 +85,12 @@ def plot_average_height(dist):
     plt.savefig('average_painting_height_in_cm.png')
     plt.show()
 
-    
 
-def write_txt_file(dist):
-
+def write_txt_file(filename, dist):
+    #with open(filename, "w") as file:
+        #file.write("Average Painting Height Each Half-Century Since 1800:\n")
+        #file.write("Time Periods (Years)\tMale Painters\tFemale Painters\n")
+        #for interval, counts in sorted(dist.items()):
     pass
 
 def main():
@@ -73,7 +101,7 @@ def main():
     height_distribution = calculate_average_height(data)
 
     # write txt file
-    write_txt_file(height_distribution)
+    write_txt_file('average_painting_height_in_cm', height_distribution)
 
     # plot data
     plot_average_height(height_distribution)
