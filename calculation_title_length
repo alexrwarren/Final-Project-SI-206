@@ -74,7 +74,7 @@ def write_lengths_to_txt_file(source_averages_dict, medium_averages_dict):
         for medium in medium_averages_dict:
             medium = medium
             average = medium_averages_dict[medium]
-            file.write(f"Average title length for all {medium} in the database: {average} words \n")
+            file.write(f"Average title length for all {medium.lower()} in the database: {average} words \n")
             file.write("\n")
 
 def visualize_title_lengths(source_averages_dict, medium_averages_dict):
