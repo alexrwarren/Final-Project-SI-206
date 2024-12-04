@@ -3,102 +3,112 @@ import os
 import sqlite3
 import matplotlib.pyplot as plt
 
-
 def open_database(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path + "/" + db_name)
     cur = conn.cursor()
     return cur, conn
 
-def get_title_length_averages(cur, conn, table_names):
-    path = os.path.dirname(os.path.abspath(__file__))
-    average_lengths_in_words = []
-    average_lengths_in_chars = []
-    for table in table_names:
-        cur.execute(f"SELECT title FROM {table}")
+def calculate_title_length_averages_by_source(cur, conn, table_names):
+    source_averages_dict = {}
+    for table in table_names:  
+        try:
+            cur.execute(f"SELECT title FROM {table}")
+        except:
+            return "table not in database"
         titles = cur.fetchall()
+        object_title_lengths = [len(title[0].split()) for title in titles]
+        average_object_title_length = round(sum(object_title_lengths) / len(object_title_lengths), 2)
         
-        title_lengths_in_words = [len(title[0].split()) for title in titles]
-        average_title_length_in_words = sum(title_lengths_in_words) / len(title_lengths_in_words)
-        average_lengths_in_words.append(round(average_title_length_in_words, 2)) 
+        #print(table)
+        if table == 'Open_Library':
+            if table not in source_averages_dict:
+                source_averages_dict[table] = {}
+            source_averages_dict[table]['medium'] = 'books'
+            source_averages_dict[table]['average title length'] = average_object_title_length
+        elif table == 'Harvard' or table == 'Met' or table == 'Cleveland':
+            if table not in source_averages_dict:
+                source_averages_dict[table] = {}
+            source_averages_dict[table]['medium'] = 'paintings'
+            source_averages_dict[table]['average title length'] = average_object_title_length
+        else:
+            continue
         
-        title_lengths_in_chars = [len(title[0]) for title in titles]
-        average_title_length_in_chars = sum(title_lengths_in_chars) / len(title_lengths_in_chars)
-        average_lengths_in_chars.append(round(average_title_length_in_chars, 2))
     
-    overall_average_chars = round(sum(average_lengths_in_chars) / len(table_names), 2)
-    overall_average_words = round(sum(average_lengths_in_words) / len(table_names), 2)
-    
-    return overall_average_words, average_lengths_in_words, overall_average_chars, average_lengths_in_chars
+    return source_averages_dict
 
-def write_lengths_to_txt_file(table_names, overall_average_words, average_lengths_in_words, overall_average_chars, average_lengths_in_chars):
-    file = open("title_lengths.txt", "w")
-    for i in range(len(table_names)):
-        file.write(f"Average painting title length (in words) for {table_names[i]}: {average_lengths_in_words[i]}\n")
-        file.write(f"Average painting title length (in characters) for {table_names[i]}: {average_lengths_in_chars[i]}\n")
-    file.write(f"Average painting title length (in words) for all museums: {overall_average_words}\n")
-    file.write(f"Average painting title length (in characters) for all museums: {overall_average_chars}\n")
+def calculate_title_length_averages_by_medium(cur, conn, source_averages_dict):
+    medium_averages_dict = {}
+    books_total = 0
+    books_source_num = 0
+    paintings_total = 0
+    paintings_source_num = 0
     
+    for source in source_averages_dict:
+        if source_averages_dict[source]['medium'] == 'books':
+            books_source_num += 1
+            books_total += source_averages_dict[source]['average title length']
+        elif source_averages_dict[source]['medium'] == 'paintings':
+            paintings_source_num += 1
+            paintings_total += source_averages_dict[source]['average title length']
+        else:
+            continue
+    books_average = round(books_total / books_source_num, 2)
+    paintings_average = round(paintings_total / paintings_source_num, 2)
+    medium_averages_dict['Books'] = books_average
+    medium_averages_dict['Paintings'] = paintings_average
 
-def visualize_title_lengths_words():
-    museums = ['Cleveland', 'Harvard', "The Met", "All Museums"]
-    average_lengths_words = []
-    average_lengths_chars = []
-    try:
-        file = open("title_lengths.txt")
-        text = file.read()
-        if not file:
-            print("file no exist")
-        cleveland_length = re.findall(r"Cleveland: ([\d\.]+)", text)
-        #print(cleveland_length)
-        average_lengths_words.append(float(cleveland_length[0]))
-        average_lengths_chars.append(float(cleveland_length[1]))
-        
-        harvard_length = re.findall(r"Harvard: ([\d\.]+)", text)
-        #print(harvard_length)
-        average_lengths_words.append(float(harvard_length[0]))
-        average_lengths_chars.append(float(harvard_length[1]))
-        
-        met_length = re.findall(r"Met: ([\d\.]+)", text)
-        average_lengths_words.append(float(met_length[0]))
-        average_lengths_chars.append(float(met_length[1]))
-        
-        all_length = re.findall(r"all.+: ([\d\.]+)", text)
-        #print(all_length)
-        average_lengths_words.append(float(all_length[0])) 
-        average_lengths_chars.append(float(all_length[1]))
-        
-    except:
-        return "File doesn't exist."
+    return medium_averages_dict
+
+def write_lengths_to_txt_file(source_averages_dict, medium_averages_dict):
+    with open("title_lengths.txt", "w") as file:
+        for source in source_averages_dict:
+            medium = source_averages_dict[source].get('medium', None)
+            average = source_averages_dict[source]['average title length']
+            if source == 'Open_Library':
+                file.write(f"Average title length for {medium} in the {source} table: {average} words\n")
+                file.write("\n")
+            elif source == 'Harvard' or source == 'Met' or source == 'Cleveland':
+                file.write(f"Average title length for {medium} in the {source} table: {average} words\n")
+                file.write("\n")
+        for medium in medium_averages_dict:
+            medium = medium
+            average = medium_averages_dict[medium]
+            file.write(f"Average title length for all {medium} in the database: {average} words \n")
+            file.write("\n")
+
+def visualize_title_lengths(source_averages_dict, medium_averages_dict):
+    sources = list(source_averages_dict.keys())
+    source_values = list(source_averages_dict.values())
+    source_averages = [value['average title length'] for value in source_values]
     
-
-#make bar chart
-    plt.figure(1, figsize=(12,6))
-    plt.title('Average Painting Title Length (Words) By Museum')
+    mediums = list(medium_averages_dict.keys())
+    medium_values = list(medium_averages_dict.values())
     
-    plt.bar(museums, average_lengths_words, color=['blue', 'red', 'pink', 'black'])
-    plt.xlabel('Museum')
-    plt.ylabel('Average Title Length (Words)')
-
-    plt.figure(2, figsize=(12,6))
-    plt.title('Average Painting Title Length (Characters) By Museum')
-    plt.bar(museums, average_lengths_chars, color=['blue', 'red', 'pink', 'black'])
-    plt.xlabel('Museum')
-    plt.ylabel('Average Title Length (Characters)')
-
+    figure = plt.figure(1, figsize=(20, 10))
+    plot1 = figure.add_subplot(121)
+    plot1.bar(sources, source_averages, color=['blue', 'red', 'purple', 'pink'])
+    plot1.set_xlabel("Data Source")
+    plot1.set_ylabel("Average Artwork Title Length in Words")
+    plot1.set_title("Average Artwork Title Length in Words by Data Source")
     
+    plot2 = figure.add_subplot(122)
+    plot2.bar(mediums, medium_values, color=['green', 'orange'])
+    plot2.set_xlabel("Art Medium")
+    plot2.set_ylabel("Average Artwork Title Length in Words")
+    plot2.set_title("Average Artwork Title Length in Words by Art Medium")
     
-
-#display the plot
+    plt.savefig("title_word_lengths_by_medium.png")
     plt.show()
-
+    
+    
 def main():
-    table_names = ['Cleveland', 'Harvard', 'Met']
-    cur, conn = open_database('Museums.db')
-    overall_average_words, average_lengths_in_words, overall_average_chars, average_lengths_in_chars = get_title_length_averages(cur, conn, table_names)
-   
-    # fix this function to write both chars and words lengths
-    write_lengths_to_txt_file(table_names, overall_average_words, average_lengths_in_words, overall_average_chars, average_lengths_in_chars)
-    visualize_title_lengths_words()
+    table_names = ['Open_Library', 'Harvard', 'Met', 'Cleveland']
+    cur, conn = open_database("Museums.db")
+    source_averages_dict = calculate_title_length_averages_by_source(cur, conn, table_names)
+    #print(source_averages_dict)
+    medium_averages_dict = calculate_title_length_averages_by_medium(cur, conn, source_averages_dict)
+    write_lengths_to_txt_file(source_averages_dict, medium_averages_dict)
+    visualize_title_lengths(source_averages_dict, medium_averages_dict)
 
 main()
