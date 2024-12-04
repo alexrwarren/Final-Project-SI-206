@@ -31,7 +31,7 @@ def process_data(data, interval=10):
     return gender_distribution
 
 def write_data_to_text_file(gender_distribution):
-    with open("gender_distribution_data.txt", "w") as file:
+    with open("gender_distribution_data.tsv", "w") as file:
         file.write("Gender Distribution of Painters Over Time:\n")
         file.write("Interval (Years)\tMale Painters\tFemale Painters\n")
         for interval, counts in sorted(gender_distribution.items()):
