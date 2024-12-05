@@ -41,12 +41,14 @@ def visualize_counts(data_dict):
     departments = [entry[0] for entry in sorted_dict]
     totals = [entry[1] for entry in sorted_dict]
     
-    figure = plt.figure(1, figsize=(20, 10))  
-    plt.pie(totals, labels=departments, autopct='%1.1f%%', pctdistance=0.85, startangle = 90)
     
+    plt.figure(1, figsize=(20, 10))  
+    plt.pie(totals, labels=departments, autopct='%1.1f%%', pctdistance=0.85, startangle = 90, wedgeprops={'width': 0.7})
+    plt.legend(loc="best")
     plt.title("Paintings by Department for Cleveland Museum of Art")  
     plt.savefig("department_frequency.png")  
     plt.show()  
+    
     
 def main():
     department_data = get_data_from_database("Museums.db")
