@@ -1,9 +1,11 @@
-import re
 import os
 import sqlite3
 import matplotlib.pyplot as plt
+import csv
 
-# opens the data base and returns connection and cursor
+# opens the data base
+# input: database name
+# output: cur, conn (connection and cursor for the database)
 def open_database(db_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path + "/" + db_name)
@@ -11,7 +13,8 @@ def open_database(db_name):
     return cur, conn
 
 # calculates the average title length for data based on API / source
-# table names should include all tables that contain painting/book title info
+# input: table_names (list of table names; table names should include all tables that contain painting/book title info)
+# output: source_averages_dict (dictionary; keys= source, values = artwork title length average)
 def calculate_title_length_averages_by_source(cur, conn, table_names):
     source_averages_dict = {}
     
@@ -34,104 +37,64 @@ def calculate_title_length_averages_by_source(cur, conn, table_names):
         if table == 'Open_Library':
             if table not in source_averages_dict:
                 source_averages_dict[table] = {}
-            source_averages_dict[table]['medium'] = 'books'
+            source_averages_dict[table]['medium'] = 'book'
             source_averages_dict[table]['average title length'] = average_object_title_length
         elif table == 'Harvard' or table == 'Met' or table == 'Cleveland':
             if table not in source_averages_dict:
                 source_averages_dict[table] = {}
-            source_averages_dict[table]['medium'] = 'paintings'
+            source_averages_dict[table]['medium'] = 'painting'
             source_averages_dict[table]['average title length'] = average_object_title_length
         
         # extra pre-caution to skip tables that aren't in db
         else:
             continue
-        
-    
     return source_averages_dict
 
-def calculate_title_length_averages_by_medium(cur, conn, source_averages_dict):
+# writes title lengths to a csv file
+# input: source_averages_dict (dictionary; keys= source, values = artwork title length average)
+# input: filename (string, name of file to write to)
+# output: none
+def write_lengths_to_csv_file(source_averages_dict, filename):
     
-    # initializes empty values for overall title length averages 
-    medium_averages_dict = {}
-    books_total = 0
-    books_source_num = 0
-    paintings_total = 0
-    paintings_source_num = 0
-    
-    # increases title length total for data's respective medium
-    for source in source_averages_dict:
-        if source_averages_dict[source]['medium'] == 'books':
-            books_source_num += 1
-            books_total += source_averages_dict[source]['average title length']
-        elif source_averages_dict[source]['medium'] == 'paintings':
-            paintings_source_num += 1
-            paintings_total += source_averages_dict[source]['average title length']
-        else:
-            continue
-        
-    # calculates the average from the total
-    books_average = round(books_total / books_source_num, 2)
-    paintings_average = round(paintings_total / paintings_source_num, 2)
-    
-    # inserts averages into dictionary as value with the medium as key
-    medium_averages_dict['Books'] = books_average
-    medium_averages_dict['Paintings'] = paintings_average
+    # opens file in write mode, makes a csv_writer object
+    # write heading and column names
+    # write row for each source
+    with open(filename, "w") as file:
+        csv_writer = csv.writer(file)
+        csv_writer.writerow(['Average Artwork Title Length (in Words) by Source/API'])
+        csv_writer.writerow(['Source/API', 'Art Medium', 'Average Artwork Title Length (in Words)'])
+        for source, values in source_averages_dict.items():
+            medium = values['medium']
+            average = values['average title length']
+            csv_writer.writerow([source, medium, average])
+    file.close()
 
-    return medium_averages_dict
-
-# writes title lengths to a txt file in a legible format
-def write_lengths_to_txt_file(source_averages_dict, medium_averages_dict):
-    with open("title_lengths.txt", "w") as file:
-        for source in source_averages_dict:
-            medium = source_averages_dict[source].get('medium', None)
-            average = source_averages_dict[source]['average title length']
-            if source == 'Open_Library':
-                file.write(f"Average title length for {medium} in the {source} table: {average} words\n")
-                file.write("\n")
-            elif source == 'Harvard' or source == 'Met' or source == 'Cleveland':
-                file.write(f"Average title length for {medium} in the {source} table: {average} words\n")
-                file.write("\n")
-        for medium in medium_averages_dict:
-            medium = medium
-            average = medium_averages_dict[medium]
-            file.write(f"Average title length for all {medium.lower()} in the database: {average} words \n")
-            file.write("\n")
-
-# makes two bar charts based on average title length
-# first bar chart is based on source
-# second bar chart is based on medium (combines like sources)
-def visualize_title_lengths(source_averages_dict, medium_averages_dict):
+# makes a bar graph visualization of title length averages by source
+# input: source_averages_dict (dictionary; keys= source, values = artwork title length average)
+# output: png image of figure
+def visualize_title_lengths(source_averages_dict):
     sources = list(source_averages_dict.keys())
     source_values = list(source_averages_dict.values())
     source_averages = [value['average title length'] for value in source_values]
     
-    mediums = list(medium_averages_dict.keys())
-    medium_values = list(medium_averages_dict.values())
+    # make the figure and bar graph
+    # set x, y labels and title
+    plt.figure(1, figsize=(20, 10))
+    plt.bar(sources, source_averages, color=['blue', 'red', 'purple', 'pink'])
+    plt.xlabel("Source/API")
+    plt.ylabel("Average Artwork Title Length (in Words)")
+    plt.title("Average Artwork Title Length (in Words) by Source/API")
     
-    figure = plt.figure(1, figsize=(20, 10))
-    plot1 = figure.add_subplot(121)
-    plot1.bar(sources, source_averages, color=['blue', 'red', 'purple', 'pink'])
-    plot1.set_xlabel("Data Source")
-    plot1.set_ylabel("Average Artwork Title Length in Words")
-    plot1.set_title("Average Artwork Title Length in Words by Data Source")
-    
-    plot2 = figure.add_subplot(122)
-    plot2.bar(mediums, medium_values, color=['green', 'orange'])
-    plot2.set_xlabel("Art Medium")
-    plot2.set_ylabel("Average Artwork Title Length in Words")
-    plot2.set_title("Average Artwork Title Length in Words by Art Medium")
-    
+    # save figure as png and show it
     plt.savefig("title_word_lengths_by_medium.png")
     plt.show()
     
     
 def main():
-    table_names = ['Open_Library', 'Harvard', 'Met', 'Cleveland']
+    table_names = ['Cleveland']
     cur, conn = open_database("Museums.db")
     source_averages_dict = calculate_title_length_averages_by_source(cur, conn, table_names)
-    #print(source_averages_dict)
-    medium_averages_dict = calculate_title_length_averages_by_medium(cur, conn, source_averages_dict)
-    write_lengths_to_txt_file(source_averages_dict, medium_averages_dict)
-    visualize_title_lengths(source_averages_dict, medium_averages_dict)
+    write_lengths_to_csv_file(source_averages_dict, "title_lengths.csv")
+    visualize_title_lengths(source_averages_dict)
 
 main()
