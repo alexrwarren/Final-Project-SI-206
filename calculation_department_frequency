@@ -1,0 +1,57 @@
+import sqlite3
+import matplotlib.pyplot as plt
+import os
+
+def get_data_from_database(database_name):
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path + "/" + database_name)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT department
+        FROM Cleveland_Departments
+        JOIN Cleveland
+        ON Cleveland.department_id = Cleveland_Departments.id
+    """)
+    data = cur.fetchall()
+    conn.close()
+    department_data = [entry[0] for entry in data]
+    return department_data
+
+def get_frequency_counts(department_data):
+    data_dict = {}
+    for entry in department_data:
+        data_dict[entry] = data_dict.get(entry, 0) + 1
+    return data_dict
+
+def write_counts_to_file(data_dict, filename):
+    file = open(filename, "w")
+    painting_sum = 0
+    for department, total in data_dict.items():
+        dept = department
+        total = total
+        painting_sum += total
+        file.write(f"Total number of Cleveland Museum of Art paintings in the {dept} department: {total}\n")
+    file.write("\n")
+    file.write(f"Total number of Cleveland Museum of Art paintings in the database: {painting_sum}")
+
+def visualize_counts(data_dict):
+    departments = list(data_dict.keys()) 
+    totals = list(data_dict.values())    
+    
+    figure = plt.figure(1, figsize=(20, 10))  
+    plt.pie(totals, labels=departments, autopct='%1.1f%%', pctdistance=0.85)
+    
+    plt.title("Department Frequency Distribution")  
+    plt.savefig("department_frequency.png")  
+    plt.show()  
+    
+def main():
+    department_data = get_data_from_database("Museums.db")
+    print(department_data)
+    data_dict = get_frequency_counts(department_data)
+    print(data_dict)
+    write_counts_to_file(data_dict, "department_counts.txt")
+    visualize_counts(data_dict)
+
+main()
