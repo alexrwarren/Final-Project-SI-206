@@ -55,6 +55,7 @@ def visualize_averages_by_department(averages_dict):
     plt.xticks(rotation=45, ha="right")
    
     plt.tight_layout()
+    plt.savefig("length_by_dept.png")
     plt.show()
     
 def main():
