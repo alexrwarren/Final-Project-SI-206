@@ -5,7 +5,9 @@ import requests
 import sqlite3
 import random
 
-# get 100 books from API
+# get books information from API
+# input: limit (the number of books to gather, auto-set to 100)
+# output: books (a list of book information, each entry is a book)
 def get_books(limit=100):
     # set url, parameter for subject (fiction) and publishing year range (1800-2024) in url
     url = "https://openlibrary.org/subjects/fiction.json?published_in=1800-2024"
@@ -30,6 +32,8 @@ def get_books(limit=100):
     return books
 
 # set up the database
+# input: database_name (name of database to open)
+# output: cur, conn (a connection and cursor to the database)
 def set_up_database(database_name):
     # set path, create conn and cur and return them
     path = os.path.dirname(os.path.abspath(__file__))
@@ -38,12 +42,17 @@ def set_up_database(database_name):
     return cur, conn
 
 # set up the Open_Library table 
+# inputs: cur, conn
+# outputs: None
 def create_Open_Library_table(cur, conn):
     # create table if it doesn't exist
     # includes id_key, title, creation_year, author_id
     cur.execute("CREATE TABLE IF NOT EXISTS Open_Library (id_key INTEGER PRIMARY KEY, title TEXT UNIQUE, creation_year INTEGER, author_id INTEGER)")
     return None
 
+# set up the Authors table 
+# inputs: cur, conn
+# outputs: None
 def create_Open_Libary_Authors_table(cur, conn):
     # create table if it doesn't exist
     # includes id, author name
@@ -52,6 +61,9 @@ def create_Open_Libary_Authors_table(cur, conn):
     return None
 
 # insert API data into the database
+# input: books (list of books to parse for information -- returned value from get_books)
+# inputs: cur, conn
+# output: None
 def insert_books_into_Open_Library(books, cur, conn):
     
     # keeps track of new books inserted into the table
@@ -111,9 +123,8 @@ def insert_books_into_Open_Library(books, cur, conn):
     
     print(f'added {len(new_books)} new books to database')
     
-    # commit changes and return new_books
+    # commit changes to database
     conn.commit()
-    return new_books
 
 def main():
     # make the db, make the table
