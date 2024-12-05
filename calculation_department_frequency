@@ -44,7 +44,7 @@ def visualize_counts(data_dict):
     figure = plt.figure(1, figsize=(20, 10))  
     plt.pie(totals, labels=departments, autopct='%1.1f%%', pctdistance=0.85, startangle = 90)
     
-    plt.title("Department Frequency Distribution")  
+    plt.title("Paintings by Department for Cleveland Museum of Art")  
     plt.savefig("department_frequency.png")  
     plt.show()  
     
