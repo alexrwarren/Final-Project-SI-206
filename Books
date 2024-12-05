@@ -5,24 +5,21 @@ import requests
 import sqlite3
 import random
 
-# get 25 (or however many) paintings from API
+# get 100 books from API
 def get_books(limit=100):
-    # set url
+    # set url, parameter for subject (fiction) and publishing year range (1800-2024) in url
     url = "https://openlibrary.org/subjects/fiction.json?published_in=1800-2024"
     
-    # set parameters to search for
-    # must search for only paintings and only created after 1800 (found in API documentation, varies by museum)
-    # skip value is determined based on the total number of items in the API minus 25, so make sure you run the API request w/o a limit first, see the total number of matches (in this case, 823), and calculate the skip 
+    # set search parameters (limit = 100 and offset = random number)
     offset = random.randint(0, 1000)
     params = {'limit': limit, 'offset': offset}
     
-    # initializes empty list for paintings
+    # initializes empty list for books
     books = []
     
-    # sends request to API, collects data for 25 paintings from API
-    # return list of paintings
+    # sends request to API, collects data for 100 books from API
+    # return list of books
     response = requests.get(url, params=params)
-    print("offset value: ", offset)
     
     if response.status_code == 200:
         data = response.json()  
@@ -40,17 +37,16 @@ def set_up_database(database_name):
     cur = conn.cursor()
     return cur, conn
 
-# set up the Cleveland table (rename function to match museum name)
+# set up the Open_Library table 
 def create_Open_Library_table(cur, conn):
-    # create table if it doesn't exist (change name of table depending on museum name)
-    # includes id_key, title, creation_year, main_artist, gender_id (only for Met, should be an integer with 1 for female, 0 for male), department (this is only relevant for Cleveland, do not include this column if not Cleveland))
+    # create table if it doesn't exist
+    # includes id_key, title, creation_year, author_id
     cur.execute("CREATE TABLE IF NOT EXISTS Open_Library (id_key INTEGER PRIMARY KEY, title TEXT UNIQUE, creation_year INTEGER, author_id INTEGER)")
     return None
 
 def create_Open_Libary_Authors_table(cur, conn):
-            
-    # create table if it doesn't exist (change name of table depending on museum name)
-    # includes id, artist
+    # create table if it doesn't exist
+    # includes id, author name
     cur.execute("CREATE TABLE IF NOT EXISTS Open_Library_Authors (id INTEGER PRIMARY KEY, author TEXT UNIQUE)")
     conn.commit()
     return None
@@ -58,19 +54,19 @@ def create_Open_Libary_Authors_table(cur, conn):
 # insert API data into the database
 def insert_books_into_Open_Library(books, cur, conn):
     
-    # keeps track of paintings inserted into the table
+    # keeps track of new books inserted into the table
     new_books = []
     
-    # go through each painting / 25
+    # go through each book / 25
     for book in books:
-        # get the title (varies depending on json setup for each API)
+        # get the title 
         # if title field empty, insert NULL
         if book['title']:
             title = book['title']
         else:
             title = None
         
-        # get the creation_date (varies depending on json setup for each API)
+        # get the first publishing date 
         # if empty -> NULL
         if book['first_publish_year']:
             creation_date = int(book['first_publish_year'])
@@ -79,7 +75,8 @@ def insert_books_into_Open_Library(books, cur, conn):
         else:
             creation_date = None
         
-        # get main artist id (varies depending on json setup for each API)
+        # get author name
+        # insert it into the author table and fetch author id key
         # if empty -> NULL
         if book['authors']:
             cur.execute("SELECT id FROM Open_Library_Authors WHERE author = ?", (book['authors'][0]['name'],))
@@ -92,30 +89,29 @@ def insert_books_into_Open_Library(books, cur, conn):
         else:
             author_id = None
 
-        # insert the data into the respective data table (change name of data table depending on museum)
+        # insert the data into the Open_Library table
         cur.execute("INSERT OR IGNORE INTO Open_Library (title, creation_year, author_id) VALUES (?, ?, ?)", (title, creation_date, author_id))
 
-        # if the row was inserted into the table, append painting to the new_painting list
-        # print that the painting and artist have been added
+        # if the row was inserted into the table, append book to the new_book list
+        # print that the book has been added
         if cur.rowcount > 0:
-        # add painting to list to keep track of new paintings added, but only if inserted
+        # add book to list to keep track of new books added, but only if inserted
             new_books.append(book)
             print(f"added book title: '{title}' to database")
        
         # if insert was ignored, state reason for ignoring
-        # usually the painting will be ignored because another artist's painting is in the db
-        # we can't have duplicate string data in the database, so I made sure that artist names are unique and repeat artists are ignored
+        # usually the book will be ignored because the title is already in the database
         else:
             print(f"book title: '{title}' already in database")
         
-        # stop incrementing if number of newly inserted paintings reaches 25
+        # stop incrementing if number of newly inserted books reaches 25
         # this is an extra precaution in case the limit on the API request is changed to be larger than 25
         if len(new_books) == 25:
             break
     
     print(f'added {len(new_books)} new books to database')
     
-    # commit changes and return new_paintings
+    # commit changes and return new_books
     conn.commit()
     return new_books
 
@@ -126,20 +122,20 @@ def main():
     create_Open_Library_table(cur, conn)
     
 
-    # print total number of paintings in db right now
+    # print total number of books in db right now
     cur.execute("SELECT COUNT(*) FROM Open_Library")
     books_inserted = cur.fetchone()[0]
     print("current book count: " + str(books_inserted))
     
-    # call API to get new paintings and insert them into the db
+    # call API to get new books and insert them into the db
     insert_books_into_Open_Library(get_books(), cur, conn)
     
-    # print total number of paintings in db after calling API
+    # print total number of books in db after calling API
     cur.execute("SELECT COUNT(*) FROM Open_Library")
     books_inserted = cur.fetchone()[0]
     print("new books count: " + str(books_inserted))
     conn.close()
     
 
-#run this code multiple times to gather > 100 paintings
+#run this code multiple times to gather > 100 books
 main()
