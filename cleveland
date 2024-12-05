@@ -15,7 +15,7 @@ def get_paintings(limit=25):
     # set random skip value
     params = {'type': 'Painting', 'created_after': 1800, 'limit': limit, 'skip': random.randint(0, 823-limit)}
     
-    # initializes empty list for paintings to be returned
+    # initializes empty list for paintings to return
     paintings = []
     
     # sends request to API, collects data for 25 paintings from API
