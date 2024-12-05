@@ -1,0 +1,67 @@
+import sqlite3
+import matplotlib.pyplot as plt
+import os
+
+def get_data_from_database(database_name):
+    path = os.path.dirname(os.path.abspath(__file__))
+    conn = sqlite3.connect(path + "/" + database_name)
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT Cleveland.title, Cleveland_Departments.department
+        FROM Cleveland
+        JOIN Cleveland_Departments
+        ON Cleveland.department_id = Cleveland_Departments.id
+    """)
+    titles_and_departments = cur.fetchall()
+    conn.close()
+    return titles_and_departments
+
+def get_painting_title_length_averages(titles_and_departments):
+    averages_dict = {}
+    for title, department in titles_and_departments:
+        if department not in averages_dict:
+            averages_dict[department] = []
+            #print(data_dict)
+        title_length = len(title.strip().split()) 
+        averages_dict[department].append(title_length)
+    #print(data_dict)
+    for department, lst in averages_dict.items():
+        average = round(sum(lst) / len(lst), 2)
+        averages_dict[department] = average
+        #print(department, average)
+    return averages_dict
+
+def write_calculations_to_txt(averages_dict, filename):
+    file = open(filename, "w")
+    for department, average in list(averages_dict.items()):
+        file.write(f"Average  title length for Cleveland Museum of Art paintings in the {department}: {average} words\n")
+        file.write('\n')
+    file.close()
+
+def visualize_averages_by_department(averages_dict):
+    sorted_dict = sorted(averages_dict.items(), key=lambda x: x[1], reverse = True)
+    departments = [entry[0] for entry in sorted_dict]
+    averages = [entry[1] for entry in sorted_dict]
+    colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'black']
+    
+    
+    plt.figure(figsize=(16, 8))
+    plt.bar(departments, averages, color=colors)
+    plt.xlabel('Department')
+    plt.ylabel('Average Painting Title Length (in Words)')
+    plt.title("Cleveland Museum of Art: Average Painting Title Length (in Words) by Department")
+    
+    plt.xticks(rotation=45, ha="right")
+   
+    plt.tight_layout()
+    plt.show()
+    
+def main():
+    titles_and_departments = get_data_from_database("Museums.db")
+    print(titles_and_departments)
+    averages_dict = get_painting_title_length_averages(titles_and_departments)
+    write_calculations_to_txt(averages_dict, 'length_by_department.txt')
+    visualize_averages_by_department(averages_dict)
+
+main()
