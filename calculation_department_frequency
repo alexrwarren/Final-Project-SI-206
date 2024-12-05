@@ -34,6 +34,7 @@ def write_counts_to_file(data_dict, filename):
         file.write(f"Total number of Cleveland Museum of Art paintings in the {dept} department: {total}\n")
     file.write("\n")
     file.write(f"Total number of Cleveland Museum of Art paintings in the database: {painting_sum}")
+    file.close()
 
 def visualize_counts(data_dict):
     departments = list(data_dict.keys()) 
@@ -48,9 +49,9 @@ def visualize_counts(data_dict):
     
 def main():
     department_data = get_data_from_database("Museums.db")
-    print(department_data)
+    #print(department_data)
     data_dict = get_frequency_counts(department_data)
-    print(data_dict)
+    #print(data_dict)
     write_counts_to_file(data_dict, "department_counts.txt")
     visualize_counts(data_dict)
 
