@@ -13,7 +13,7 @@ def get_data_from_database(database_name):
     conn = sqlite3.connect(path + "/" + database_name)
     cur = conn.cursor()
 
-    # select the painting title and department name for each paiting
+    # select the painting title and department name for each painting
     # return data as a list of tuples
     cur.execute("""
         SELECT Cleveland.title, Cleveland_Departments.department
