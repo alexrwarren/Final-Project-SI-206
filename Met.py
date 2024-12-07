@@ -68,7 +68,7 @@ def insert_paintings_into_MET(paintings, cur, conn):
             if painting.get('classification') not in acceptable_classifications:
                 continue
             
-            if painting['objectEndDate'] < 1800 or not painting['objectEndDate']:
+            if painting['objectEndDate'] < 1800 or not painting['objectEndDate'] or painting['objectEndDate'] > 2024:
                 continue
             
             # Extract title
@@ -126,4 +126,8 @@ def main():
     conn.close()
     
 
+main()
+main()
+main()
+main()
 main()
