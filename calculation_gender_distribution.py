@@ -1,6 +1,7 @@
+import os
 import sqlite3
 import matplotlib.pyplot as plt
-import os
+import csv
 
 def get_data_from_database(database_name):
     path = os.path.dirname(os.path.abspath(__file__))
@@ -30,17 +31,25 @@ def process_data(data, interval=10):
 
     return gender_distribution
 
-def write_data_to_text_file(gender_distribution):
-    with open("gender_distribution_data.tsv", "w") as file:
-        file.write("Gender Distribution of Painters Over Time:\n")
-        file.write("Interval (Years)\tMale Painters\tFemale Painters\n")
-        for interval, counts in sorted(gender_distribution.items()):
-            file.write(f"{interval}-{interval + 19}\t{counts['male']}\t{counts['female']}\n")
+def write_data_to_csv_file(gender_distribution):
+    with open("gender_distribution_data.csv", "w", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["Interval (Years)", "Male Painters", "Female Painters"])
+        
+        interval = 20
+        for interval_start, counts in sorted(gender_distribution.items()):
+            interval_end = interval_start + (interval - 1)
+            interval_range = f"{interval_start}-{interval_end}"
+            male_count = counts['male']
+            female_count = counts['female']
+            writer.writerow([interval_range, male_count, female_count])
 
 def plot_gender_distribution(gender_distribution):
     intervals = sorted(gender_distribution.keys())
     male_counts = [gender_distribution[interval]['male'] for interval in intervals]
     female_counts = [gender_distribution[interval]['female'] for interval in intervals]
+
+    interval_labels = [f"{interval}-{interval + 19}" for interval in intervals]
 
     plt.figure(figsize=(12, 6))
     plt.bar(intervals, male_counts, width=8, label="Male Painters", alpha=0.7, color="blue")
@@ -50,7 +59,7 @@ def plot_gender_distribution(gender_distribution):
     plt.ylabel("Number of Painters")
     plt.title("Gender Distribution of Painters Over Time")
     plt.legend()
-    plt.xticks(intervals, rotation=45)
+    plt.xticks(intervals, interval_labels)  
     plt.tight_layout()
 
     plt.savefig("gender_distribution_over_time.png")
@@ -61,7 +70,7 @@ def main():
     data = get_data_from_database(database_name)
     gender_distribution = process_data(data, interval=20)
     
-    write_data_to_text_file(gender_distribution)
+    write_data_to_csv_file(gender_distribution)
     
     plot_gender_distribution(gender_distribution)
 
