@@ -58,7 +58,7 @@ def write_data_to_csv_file(gender_distribution, interval):
         # make a csv writer
         # write the heading
         writer = csv.writer(csvfile)
-        writer.writerow(["Paiting Creation Date Range", "Male Painters", "Female Painters"])
+        writer.writerow(["Painting Creation Date Range", "Male Painters", "Female Painters"])
         
         interval = interval
         
