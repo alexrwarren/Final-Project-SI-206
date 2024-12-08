@@ -93,7 +93,7 @@ def plot_gender_distribution(gender_distribution, interval=10):
     plt.bar(intervals, female_counts, width=8, label="Female Painters", alpha=0.7, color="pink", bottom=male_counts)
 
     # set axis labels and title
-    plt.xlabel("Paiting Creation Date")
+    plt.xlabel("Painting Creation Date")
     plt.ylabel("Number of Painters")
     plt.title("Distribution of Artist Gender for Paintings at The Metropolitan Museum of Art")
     
