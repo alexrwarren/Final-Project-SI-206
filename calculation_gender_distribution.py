@@ -78,7 +78,7 @@ def write_data_to_csv_file(gender_distribution, interval):
 # input: gender_distribution (returned from process_data, dict)
 # input: interval (returned from process_data)
 # output: png image of bar chart
-def plot_gender_distribution(gender_distribution, interval=10):
+def plot_gender_distribution(gender_distribution, interval):
     
     # set lists of data to be charted (intervals, male painter counts by interval, female painter counts by interval)
     intervals = sorted(gender_distribution.keys())
