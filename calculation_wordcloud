@@ -127,7 +127,7 @@ def visualize_word_cloud(word_dict, table_names_string, table):
         plt.imshow(word_cloud, interpolation="bicubic")
         
         # create title, turn off axis, save figure as png
-        plt.title(f"Frequencies for Artwork Title Words in the {table_names_string} {table.capitalize()}")
+        plt.title(f"Frequencies of Artwork Title Words in the {table_names_string} {table.capitalize()}")
         plt.axis("off")
         plt.savefig("wordcloud_of_title_words.png")
         
