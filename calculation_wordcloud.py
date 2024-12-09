@@ -142,9 +142,9 @@ def visualize_word_cloud(word_dict, table_names_string, table):
 def main():
     table_names_lst = ['Open_Library', 'Cleveland']
     words_lst = get_words_from_database(table_names_lst, 'Museums.db')
-    print(words_lst)
+    #print(words_lst)
     words_dict = calculate_word_frequency(words_lst)
-    print(words_dict)
+    #print(words_dict)
     table_names_string, table = write_to_csv_file('word_frequencies_in_titles.csv', words_dict, table_names_lst)
     visualize_word_cloud(words_dict, table_names_string, table)
 
