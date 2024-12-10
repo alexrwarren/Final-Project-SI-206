@@ -68,7 +68,7 @@ def calculate_average_height(data):
 def write_heights_to_csv_file(filename, dist):
     with open(filename, "w") as file:
         csv_writer = csv.writer(file)
-        csv_writer.writerow(["Average Painting Height for Artwork From Harvard Art Museums for Each Half-Century Since 1800"])
+        csv_writer.writerow(["Harvard Art Museums: Average Painting Height (cm) by Date of Creation"])
         csv_writer.writerow(['Painting Creation Date', 'Average Painting Height (in cm)'])
 
         sorted_tups = sorted(list(dist.items()), key = lambda x: x[0])
@@ -108,7 +108,7 @@ def main():
     height_distribution = calculate_average_height(data)
 
     # write csv file
-    write_heights_to_csv_file('average_painting_height_in_cm', height_distribution)
+    write_heights_to_csv_file('Harvard_average_painting_height_in_cm', height_distribution)
 
     # plot data
     plot_average_height(height_distribution)
