@@ -61,7 +61,7 @@ def write_lengths_to_csv_file(source_averages_dict, filename):
     # write row for each source
     with open(filename, "w") as file:
         csv_writer = csv.writer(file)
-        csv_writer.writerow(['Average Artwork Title Length (in Words) by Source/API'])
+        csv_writer.writerow(['Average Artwork Title Length by Source/API'])
         csv_writer.writerow(['Source/API', 'Art Medium', 'Average Artwork Title Length (in Words)'])
         for source, values in source_averages_dict.items():
             medium = values['medium']
@@ -79,22 +79,23 @@ def visualize_title_lengths(source_averages_dict):
     
     # make the figure and bar graph
     # set x, y labels and title
-    plt.figure(1, figsize=(20, 10))
-    plt.bar(sources, source_averages, color=['blue', 'red', 'purple', 'pink'])
+    plt.figure(1, figsize=(10, 5))
+    plt.bar(sources, source_averages, edgecolor = 'black', color=['blue', 'red', 'purple', 'pink'])
     plt.xlabel("Source/API")
     plt.ylabel("Average Artwork Title Length (in Words)")
-    plt.title("Average Artwork Title Length (in Words) by Source/API")
+    plt.title("Average Artwork Title Length by Source/API")
+    plt.tight_layout()
     
     # save figure as png and show it
-    plt.savefig("title_word_lengths_by_medium.png")
+    plt.savefig("allsources_title_word_lengths_by_source.png")
     plt.show()
     
     
 def main():
-    table_names = ['Cleveland']
+    table_names = ['Cleveland', 'Harvard', 'Met', 'Open_Library']
     cur, conn = open_database("Museums.db")
     source_averages_dict = calculate_title_length_averages_by_source(cur, conn, table_names)
-    write_lengths_to_csv_file(source_averages_dict, "title_lengths.csv")
+    write_lengths_to_csv_file(source_averages_dict, "allsources_title_lengths.csv")
     visualize_title_lengths(source_averages_dict)
 
 main()

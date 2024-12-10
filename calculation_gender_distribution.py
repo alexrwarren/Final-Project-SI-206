@@ -53,13 +53,13 @@ def process_data(data, interval=10):
 def write_data_to_csv_file(gender_distribution, interval):
     
     # open file to write to
-    with open("gender_distribution_data.csv", "w", newline="") as csvfile:
+    with open("Met_gender_distribution_data.csv", "w", newline="") as csvfile:
         
         # make a csv writer
         # write the heading and title
         writer = csv.writer(csvfile)
-        writer.writerow(['Artist Gender Counts for Paintings at The Metropolitan Museum of Art by Date'])
-        writer.writerow(["Painting Creation Date Range", "Male Painters", "Female Painters"])
+        writer.writerow(['The Metropolitan Museum of Art: Artist Gender Count by Creation Date of Artwork'])
+        writer.writerow(["Painting Creation Date", "Number of Male Painters", "Number of Female Painters"])
         
         interval = interval
         
@@ -96,7 +96,7 @@ def plot_gender_distribution(gender_distribution, interval):
     # set axis labels and title
     plt.xlabel("Painting Creation Date")
     plt.ylabel("Number of Painters")
-    plt.title("Distribution of Artist Gender for Paintings at The Metropolitan Museum of Art")
+    plt.title("The Metropolitan Museum of Art: Artist Gender Count by Creation Date of Artwork")
     
     # create a legend
     plt.legend()

@@ -70,7 +70,7 @@ def write_calculations_to_csv(averages_dict, filename):
     csv_writer = csv.writer(file)
     
     # write file header and column names
-    csv_writer.writerow([f"Painting Title Length Average (in Words) by Department for Artwork From the Cleveland Museum of Art"])
+    csv_writer.writerow([f"Cleveland Museum of Art: Painting Title Length Average by Department"])
     csv_writer.writerow(['Department', 'Title Length Average (in Words)'])
     
     # write a row for each department, average pair in list of words
@@ -95,10 +95,10 @@ def visualize_averages_by_department(averages_dict):
     # set labels
     # set title
     plt.figure(figsize=(16, 8))
-    plt.bar(departments, averages, color=colors)
+    plt.bar(departments, averages, edgecolor = 'black', color=colors)
     plt.xlabel('Department')
     plt.ylabel('Average Painting Title Length (in Words)')
-    plt.title("Average Painting Title Length (in Words) by Department for Cleveland Museum of Art")
+    plt.title("Cleveland Museum of Art: Painting Title Length Average by Department")
     
     # rotate the x axis labels so that they're not cut off/overlapping
     plt.xticks(rotation=45, ha="right")
@@ -106,14 +106,13 @@ def visualize_averages_by_department(averages_dict):
     # save figure as a png image
     # show the figure
     plt.tight_layout()
-    plt.savefig("length_by_dept.png")
+    plt.savefig("Cleveland_length_by_dept.png")
     plt.show()
     
 def main():
     titles_and_departments = get_data_from_database("Museums.db")
-    print(titles_and_departments)
     averages_dict = get_painting_title_length_averages(titles_and_departments)
-    write_calculations_to_csv(averages_dict, 'length_by_department.csv')
+    write_calculations_to_csv(averages_dict, 'Cleveland_length_by_department.csv')
     visualize_averages_by_department(averages_dict)
 
 main()
