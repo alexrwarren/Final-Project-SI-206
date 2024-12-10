@@ -97,6 +97,7 @@ def plot_average_height(height_dist):
     plt.title("Harvard Art Museums: Average Painting Height (cm) by Date of Creation")
     plt.legend()
     plt.xticks(rotation=45)
+    plt.tight_layout()
     plt.savefig('Harvard_average_painting_height_in_cm.png')
     plt.show()
 
