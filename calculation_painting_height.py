@@ -1,122 +1,117 @@
-import sqlite3
-import matplotlib.pyplot as plt
-import os
-import csv
+import sqlite3              
+import matplotlib.pyplot as plt     
+import os                           
+import csv                          
 
 
-# get the creation years and heights for paintings from the database
-# input: database_name (name of the database to get data from, str)
-# output: data (a list of tuples, the creation years and heights in the format (year, height))
-def get_years_and_heights(database_name):
-    path = os.path.dirname(os.path.abspath(__file__))
-    conn = sqlite3.connect(path + "/" + database_name)
-    cur = conn.cursor()
+# function: connect to a database and pull necessary variables (creation year, height) for analysis
+# input: database (name of the database to connect to, str)
+# output: data (list, a list of tuples in the format (creation year, height) for each painting pulled from the database)
+def get_data(database):
+    path = os.path.dirname(os.path.abspath(__file__))           # establish path to database
+    conn = sqlite3.connect(path + "/" + database)               # establish connection
+    cur = conn.cursor()                                         # create cursor
 
-    cur.execute("""
+    # gather creation_year and height_cm variables from Harvard table in Museums.db database
+    cur.execute("""                                             
         SELECT creation_year, height_cm FROM Harvard
         WHERE creation_year IS NOT NULL
         AND height_cm IS NOT NULL
     """)
     data = cur.fetchall()
     conn.close()
-    #print(f"these are the paintings pulled from the database: {data}")
     return data
 
-# calculate the average heights for paintings within a year interval
-# input: data (a list of tuples in the format [(creation year, height in cm), ...])
-# input: interval (the interval to determine creation date ranges, default set to 50 years, int)
-# output: height_distribution (a dictionary with keys as interval years (e.g. 1900, 1950, 2000) and values as inner dictionaries)
-# output: cont. height_distribution (dictionary values = inner dictionary with keys as 'total_height', 'number_of_paintings', and 'average_height' and values as float/ints for the respective key)
-# output: interval (same as input, int)
-def calculate_average_height(data, interval=50):
-        # initializes empty dictionary
-    height_distribution = {}
 
-    # for each year, height tuple in painting data...
-    for year, height in data:
-        #print(f"this is the year of the painting: {year}")
-        
-        # determine interval year to categorize data based on decade (1924 -> 1920, 1919 -> 1910, etc.)
-        interval_key = (year // interval) * interval
-        #print(f"this is the interval key of the painting with year = {year}: {interval_key}")
-        
-        # initialize inner dictionary for each interval key
-        if interval_key not in height_distribution:
-            height_distribution[interval_key] = {'total_height': 0, 'number_of_paintings': 0, 'average_height': 0}
-            #print(f"creating inner dictionary for {interval_key}")
-        
-        # adds height to the distribution at the interval key
-        height_distribution[interval_key]['total_height'] += height
-        height_distribution[interval_key]['number_of_paintings'] += 1
-        #print(f"this is the current interval information for {interval_key}: {height_distribution[interval_key]}")
+# function: create dictionary with time periods of painting's creation as the keys and a list of painting heights in that time period as the values
+# input: data (a list of tuples, returned from get_data())
+# output: height_dist (dict, a dictionary containing the time periods as keys (type = str) painting height averages as values (type = float))
+def calculate_average_height(data):
+    height_dist = {}                                # create empty dictionary                      
     
-    # calculates the average height and replaces dictionary value as average
-    for interval_key, info in height_distribution.items():
-        info['average_height'] = round(info['total_height'] / info['number_of_paintings'], 2)
-        #print(f"this is the final interval information for {interval_key}: {height_distribution[interval_key]}")
+    for creation_year, height_cm in data:           # filter painting data based on creation_year variable and sum total painting heights
+        if 1800 <= creation_year < 1850:
+            if '1800-1849' not in height_dist:
+                height_dist['1800-1849']  = {"heights": []}    # if first collected painting for a time period, create an integer placeholder
+            height_dist['1800-1849']['heights'].append(height_cm)  # add painting height onto the current list for painting heights in that time period
 
-    return height_distribution, interval
+        elif 1850 <= creation_year < 1900:
+            if '1850-1899' not in height_dist:
+                height_dist['1850-1899']  = {"heights": []}
+            height_dist['1850-1899']['heights'].append(height_cm)
 
-# write the calculations to a csv file
-# input: height_data (a dictionary with keys as interval years (e.g. 1900, 1950, 2000) and values as inner dictionaries)
-# input: cont. height_data (dictionary values = inner dictionary with keys as 'total_height', 'number_of_paintings', and 'average_height' and values as float/ints for the respective key)
-# input: interval (the interval to determine creation date ranges, default set to 50 years, int)
-# input: filename (the name of the csv file to write to, string)
+        elif 1900 <= creation_year < 1950:
+            if '1900-1949' not in height_dist:
+                height_dist['1900-1949']  = {"heights": []}
+            height_dist['1900-1949']['heights'].append(height_cm)
+
+        elif 1950 <= creation_year < 2000:
+            if '1950-1999' not in height_dist:
+                height_dist['1950-1999']  = {"heights": []}
+            height_dist['1950-1999']['heights'].append(height_cm)
+
+        elif 2000 <= creation_year <= 2050:
+            if '2000-2049' not in height_dist:
+                height_dist['2000-2049']  = {"heights": []}
+            height_dist['2000-2049']['heights'].append(height_cm)
+    
+    for key, heights in height_dist.items(): # iterates through each time period and height list in the dictionary
+        average_height = round(sum(heights['heights']) / len(heights['heights']), 2) # calculates the average painting height from the list
+        height_dist[key] = average_height # replaces the dictionary value at the year range key with the average painting height
+
+    return height_dist
+
+# writes the height averages to a csv file
+# input: filename (str, the name of the file to write to)
+# input: dist (dict, a dictionary containing the time periods as keys (type = str) painting height averages as values (type = float))
 # output: None
-def write_to_csv_file(height_data, interval, filename):
-    with open(filename, 'w') as file:
+def write_heights_to_csv_file(filename, dist):
+    with open(filename, "w") as file:
         csv_writer = csv.writer(file)
-        csv_writer.writerow(['Average Height for Paintings in Harvard Art Museums by Date'])
-        csv_writer.writerow(['Painting Creation Date Range', 'Average Painting Height (in cm)'])
-        for interval_key, info in height_data.items():
-            avg_height = info['average_height']
-            end_date = interval_key + interval - 1
-            years = f"{interval_key}-{end_date}"
-            csv_writer.writerow([years, avg_height])
-    file.close() 
+        csv_writer.writerow(["Average Painting Height for Artwork From Harvard Art Museums for Each Half-Century Since 1800"])
+        csv_writer.writerow(['Painting Creation Date', 'Average Painting Height (in cm)'])
+
+        sorted_tups = sorted(list(dist.items()), key = lambda x: x[0])
+
+        for time_period, average in sorted_tups:
+            csv_writer.writerow([time_period, average])
+    file.close()
     
-    
-# visualize height data as a a bar chart
-# input: height_data (a dictionary with keys as interval years (e.g. 1900, 1950, 2000) and values as inner dictionaries)
-# input: cont. height_data (dictionary values = inner dictionary with keys as 'total_height', 'number_of_paintings', and 'average_height' and values as float/ints for the respective key)
-# input: interval (the interval to determine creation date ranges, default set to 50 years, int)
+# function: create a bar chart for the average painting heights
+# input: height_dist (a dictionary of the time periods and heights for the paintings in the Harvard table, dict, keys = time periods (str), values = height averages (float))
 # output: None
-def visualize_height_data(height_data, interval):
-    
-    # Set lists of data to be charted (intervals, average heights)
-    intervals = sorted(height_data.keys())
-    heights = [height_data[interval]['average_height'] for interval in intervals]
+def plot_average_height(height_dist):
 
-    # Set interval labels as year range (ex: 1900-1919)
-    interval_labels = [f"{interval_start}-{interval_start + interval - 1}" for interval_start in intervals]
+    plt.figure(figsize= (10,6)) # set the figure size
 
+    sorted_tups = sorted(list(height_dist.items()), key = lambda x: x[0]) # sort the dictionary by year range (1800 first, 2000 last)
 
-    # Create a figure with a bar chart
-    plt.figure(figsize=(10, 6))
-    
-    
-    # Plot the bars, make intervals into strings so that the bar will auto-adjust width
-    intervals = [str(interval) for interval in intervals]
-    plt.bar(intervals, heights, color=['red', 'orange', 'yellow', 'green', 'blue'])
+    time_periods = [x[0] for x in sorted_tups] # makes a list of time periods from dataset
+    averages = [x[1] for x in sorted_tups] # makes a list of painting height averages from dataset
+ 
+    plt.bar(time_periods, averages, edgecolor = 'black', color = ['red', 'orange', 'yellow', 'green', 'blue'])
 
-    # Set axis labels and title
-    plt.xlabel("Painting Creation Date")
-    plt.ylabel("Painting Height (in cm)")
-    plt.title("Distribution of Painting Height (in cm) for Artwork at Harvard Art Museums")
-    
-    # Set x-ticks as interval labels
-    plt.xticks(intervals, interval_labels)
-
-    # Save and show the plot
-    plt.savefig("Harvard_height_distribution_over_time.png")
+    # set labels + title
+    plt.xlabel('Painting Creation Date')
+    plt.ylabel('Painting Height (cm)')
+    plt.title("Harvard Art Museums: Average Painting Height (cm) by Date of Creation")
+    plt.legend()
+    plt.xticks(rotation=45)
+    plt.savefig('Harvard_average_painting_height_in_cm.png')
     plt.show()
-    
+
 def main():
-    data = get_years_and_heights("Museums.db")
-    height_data, interval = calculate_average_height(data, 50)
-    write_to_csv_file(height_data, interval, "Harvard_height_data.csv")
-    visualize_height_data(height_data, interval)
+    database = "Museums.db"
+    data = get_data(database)
 
-main()
+    # calculate data
+    height_distribution = calculate_average_height(data)
 
+    # write csv file
+    write_heights_to_csv_file('average_painting_height_in_cm', height_distribution)
 
+    # plot data
+    plot_average_height(height_distribution)
+
+if __name__ == "__main__":
+    main()
