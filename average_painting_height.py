@@ -61,7 +61,7 @@ def calculate_average_height(data):
 
     index = 0
     for key in height_dist:
-        average = (height_dist[key]) / (count_lst[index])
+        average = round((height_dist[key]) / (count_lst[index]), 2)
         height_dist[key] = average
         index += 1
 
@@ -86,12 +86,11 @@ def plot_average_height(dist):
     plt.show()
 
 
-def write_txt_file(filename, dist):
-    #with open(filename, "w") as file:
-        #file.write("Average Painting Height Each Half-Century Since 1800:\n")
-        #file.write("Time Periods (Years)\tMale Painters\tFemale Painters\n")
-        #for interval, counts in sorted(dist.items()):
-    pass
+def write_csv_file(filename, dist):
+    with open(filename, "w") as file:
+        file.write("Average Painting Height Each Half-Century Since 1800:\n")
+        for time_period, average in dist.items():
+            file.write(f"Average height for Harvard Art Museums' paintings made between {time_period}: {average} cm.\n")
 
 def main():
     database = "Museums.db"
@@ -101,7 +100,7 @@ def main():
     height_distribution = calculate_average_height(data)
 
     # write txt file
-    write_txt_file('average_painting_height_in_cm', height_distribution)
+    write_csv_file('average_painting_height_in_cm', height_distribution)
 
     # plot data
     plot_average_height(height_distribution)
