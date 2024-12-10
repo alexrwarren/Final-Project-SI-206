@@ -78,7 +78,7 @@ def insert_paintings_into_harvard(paintings, cur, conn):
 
         # locate date the painting was created
         if painting['dateend']:
-            if painting['dateend'] >= 1800:
+            if painting['dateend'] >= 1800:     # only gather paintings created after 1800
                 creation_year = painting['dateend'] 
             else:
                 continue
@@ -92,7 +92,7 @@ def insert_paintings_into_harvard(paintings, cur, conn):
         else:
             height_cm = None
 
-        # insert title, creation_year, and height_cm into Harvard table in Museums.db database   
+        # insert title, creation_year, and height_cm of each painting into Harvard table in Museums.db database   
         cur.execute('''
                         INSERT OR IGNORE INTO Harvard
                         (title, creation_year, height_cm)
@@ -100,38 +100,42 @@ def insert_paintings_into_harvard(paintings, cur, conn):
                         ''',
                         (title, creation_year, height_cm)
                         )
+        
+        # add paintings new to the database also into new_paintings list
         if cur.rowcount > 0:
             new_paintings.append(painting)
-            print(f"added painting title: '{title}' to database")
+            print(f"added painting title: '{title}' to database")       # print confirmation of success
         else:
-            print(f"painting '{title}' is already in database")
+            print(f"painting '{title}' is already in database")         # print notice saying this painting is already in the database
 
-        #ensuring only 25 are added at a time
+        # ensure only 25 are added to the database at a time
         if len(new_paintings) == 25:
             break
+
+    # print confirmation of how many new paintings were added into the database out of the 25 pulled each run    
     print(f"Added {len(new_paintings)} new paintings to database")
 
+    # commit changes
     conn.commit()
+
+    # return list of new paintings out of the 25 pulled
     return new_paintings
 
 def main():
-    page = random.randint(0, 6)
-    page_lst = []
-    
 
-    # make the db, make the table
+    # make the database, make the table
     cur, conn = create_database("Museums.db")
     create_harvard_table(cur, conn)
 
-    # print total number of paintings in db right now
+    # print current number of paintings in database
     cur.execute("SELECT COUNT(*) FROM Harvard")
     paintings_inserted = cur.fetchone()[0]
     print("current painting count: " + str(paintings_inserted))
     
-    # call API to get new paintings and insert them into the db
+    # call API to get new paintings and insert them into the database
     insert_paintings_into_harvard(get_paintings(), cur, conn)
     
-    # print total number of paintings in db after calling API
+    # print total number of paintings in database after calling API
     cur.execute("SELECT COUNT(*) FROM Harvard")
     paintings_inserted = cur.fetchone()[0]
     print("new painting count: " + str(paintings_inserted))
