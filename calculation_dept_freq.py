@@ -95,7 +95,7 @@ def visualize_counts(data_dict):
 def main():
     department_data = get_data_from_database("Museums.db")
     data_dict = get_frequency_counts(department_data)
-    write_counts_to_file(data_dict, "department_counts.csv")
+    write_counts_to_file(data_dict, "Cleveland_department_counts.csv")
     visualize_counts(data_dict)
 
 main()
