@@ -5,17 +5,13 @@ import requests
 import sqlite3
 import random
 
-# gets paintings from API
-# input: limit (the maxiumum number of paintings' info to return, int)
-# output: object_ids (a list of object ids pulled from the API, each object id represents a Met painting, list)
+# get 25 (or however many) paintings from API
 def get_paintings(limit=100):
-    
-    # set url for API with correct endpoint
     url = "https://collectionapi.metmuseum.org/public/collection/v1/search"
     
     # Set parameters to search for paintings only
     params = {
-        'medium': 'Paintings', 
+        'medium': 'Paintings',  # Filter for paintings
         'q': '*'
     }
     
@@ -26,7 +22,6 @@ def get_paintings(limit=100):
         total_paintings = data['total']
         object_ids = data['objectIDs']
         
-        # gather a random sample of the object ids with len = limit
         if total_paintings > limit:
             return random.sample(object_ids, limit)
         else:
@@ -35,9 +30,7 @@ def get_paintings(limit=100):
         return None
     
 
-# sets up the database
-# input: database_name (the name of the database to create; str)
-# output: cur, conn (a cursor and connection to the database)
+# set up the database
 def set_up_database(database_name):
     # set path, create conn and cur and return them
     path = os.path.dirname(os.path.abspath(__file__))
@@ -45,12 +38,10 @@ def set_up_database(database_name):
     cur = conn.cursor()
     return cur, conn
 
-# sets up the MET table with columns for id key, title, creation year, and gender id
-# input: cur, conn (the cursor and connection to the database)
-# output: None
+# set up the MET table (rename function to match museum name)
 def create_MET_table(cur, conn):
     cur.execute("""
-    CREATE TABLE IF NOT EXISTS Met (
+    CREATE TABLE IF NOT EXISTS MET (
         id_key INTEGER PRIMARY KEY,
         title TEXT UNIQUE,
         creation_year INTEGER,
@@ -60,15 +51,12 @@ def create_MET_table(cur, conn):
     conn.commit()
 
 
-# insert painting data into the database
-# input: paintings (a list of object ids -- returned from get_paintings, list)
-# inputs: cur, conn
-# output: new_paintings (a list of object ids that were added to the database during the function call, list)
+# insert API data into the database
 def insert_paintings_into_MET(paintings, cur, conn):
     new_paintings = []
     
     for painting_id in paintings:
-        # fetch individual painting data
+        # Fetch individual painting data
         url = f"https://collectionapi.metmuseum.org/public/collection/v1/objects/{painting_id}"
         response = requests.get(url)
         
@@ -77,26 +65,23 @@ def insert_paintings_into_MET(paintings, cur, conn):
 
             acceptable_classifications = ['Paintings', 'Paintings-Decorative', 'Bark-Paintings']
 
-             # if artwork isn't a painting, try next object id
             if painting.get('classification') not in acceptable_classifications:
                 continue
             
-            # if artwork was made before 1800 or doesn't have an end date, try next object id
             if painting['objectEndDate'] < 1800 or not painting['objectEndDate'] or painting['objectEndDate'] > 2024:
                 continue
             
-            # Extract title from painting data
+            # Extract title
             if painting['title']:
                 title = re.findall(r"[^(]+", painting['title'])[0].strip()
                 #print(title)
             else:
                 title = None
             
-            # Extract creation year from painting data
+            # Extract creation year
             creation_year = painting['objectEndDate']
             
-            # Extract artist gender from painting data (None = male in API data) 
-            # Set gender to 1 if female, 0 if male
+            # Extract artist gender (1 = female)
             if painting["artistGender"]:
                 gender_id = 1
                 #print(gender_id)
@@ -113,7 +98,6 @@ def insert_paintings_into_MET(paintings, cur, conn):
             else:
                 print(f"Painting: '{title}' already in database")
             
-            # if 25 paintings added, stop adding more
             if len(new_paintings) == 25:
                 break
     
@@ -141,6 +125,5 @@ def main():
     print("new painting count: " + str(paintings_inserted))
     conn.close()
     
-# run code multiple times to collect > 100 paintings
-main()
 
+main()

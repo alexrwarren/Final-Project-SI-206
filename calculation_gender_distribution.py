@@ -1,7 +1,11 @@
+import os
 import sqlite3
 import matplotlib.pyplot as plt
-import os
+import csv
 
+# gets data from the database
+# input: databse_name (the name of the database, str)
+# output: data (a list of creation years and gender ids for each painting in the databse, list of tuples)
 def get_data_from_database(database_name):
     path = os.path.dirname(os.path.abspath(__file__))
     conn = sqlite3.connect(path + "/" + database_name)
@@ -15,55 +19,103 @@ def get_data_from_database(database_name):
     conn.close()
     return data
 
+# processes the data for file writing
+# input: data (a list of painting data in format [(painting year, artist gender id), ...])
+# input: interval (a year interval to determine the year key from, int (default = 10))
+# output: gender_distribution (a dictionary with keys = interval keys (ex: 1900, 1910, 1920, int) and values = dictionary with keys = male/female and values = 0/1 respectively, dict)
 def process_data(data, interval=10):
+    
+    # initializes empty dictionary
     gender_distribution = {}
 
+    # for each year, gender id tuple in painting data...
     for year, gender_id in data:
+        
+        # determine interval year to categorize data based on decade (1924 -> 1920, 1919 -> 1910, etc.)
         interval_key = (year // interval) * interval
+        
+        # initialize inner dictionary for each interval key
         if interval_key not in gender_distribution:
             gender_distribution[interval_key] = {'male': 0, 'female': 0}
         
+        # adds 1 to count for male/female based on painting artist gender
         if gender_id == 1:
             gender_distribution[interval_key]['female'] += 1
         else:
             gender_distribution[interval_key]['male'] += 1
 
-    return gender_distribution
+    return gender_distribution, interval
 
-def write_data_to_text_file(gender_distribution):
-    with open("gender_distribution_data.txt", "w") as file:
-        file.write("Gender Distribution of Painters Over Time:\n")
-        file.write("Interval (Years)\tMale Painters\tFemale Painters\n")
-        for interval, counts in sorted(gender_distribution.items()):
-            file.write(f"{interval}-{interval + 19}\t{counts['male']}\t{counts['female']}\n")
+# writes the gender distribution data to a csv file
+# input: gender_distribution (dictionary of dictionaries with gender dist data -- returned from proces_data)
+# input: interval (returned from process_data)
+# output: None
+def write_data_to_csv_file(gender_distribution, interval):
+    
+    # open file to write to
+    with open("gender_distribution_data.csv", "w", newline="") as csvfile:
+        
+        # make a csv writer
+        # write the heading and title
+        writer = csv.writer(csvfile)
+        writer.writerow(['Artist Gender Counts for Paintings at The Metropolitan Museum of Art by Date'])
+        writer.writerow(["Painting Creation Date Range", "Male Painters", "Female Painters"])
+        
+        interval = interval
+        
+        for interval_start, counts in sorted(gender_distribution.items()):
+            
+            # calculate end date for interval
+            interval_end = interval_start + (interval - 1)
+            interval_range = f"{interval_start}-{interval_end}"
+            
+            # write counts to file
+            male_count = counts['male']
+            female_count = counts['female']
+            writer.writerow([interval_range, male_count, female_count])
 
-def plot_gender_distribution(gender_distribution):
+# visualize gender distribution as bar chart
+# input: gender_distribution (returned from process_data, dict)
+# input: interval (returned from process_data)
+# output: png image of bar chart
+def plot_gender_distribution(gender_distribution, interval):
+    
+    # set lists of data to be charted (intervals, male painter counts by interval, female painter counts by interval)
     intervals = sorted(gender_distribution.keys())
     male_counts = [gender_distribution[interval]['male'] for interval in intervals]
     female_counts = [gender_distribution[interval]['female'] for interval in intervals]
 
+    # set interval labels as year range (ex: 1900-1919)
+    interval_labels = [f"{interval_start}-{interval_start + interval - 1}" for interval_start in intervals]
+
+    # create a figure with two bar charts, one for female, one for male count
     plt.figure(figsize=(12, 6))
     plt.bar(intervals, male_counts, width=8, label="Male Painters", alpha=0.7, color="blue")
     plt.bar(intervals, female_counts, width=8, label="Female Painters", alpha=0.7, color="pink", bottom=male_counts)
 
-    plt.xlabel("Year Intervals")
+    # set axis labels and title
+    plt.xlabel("Painting Creation Date")
     plt.ylabel("Number of Painters")
-    plt.title("Gender Distribution of Painters Over Time")
+    plt.title("Distribution of Artist Gender for Paintings at The Metropolitan Museum of Art")
+    
+    # create a legend
     plt.legend()
-    plt.xticks(intervals, rotation=45)
+    
+    # set x ticks as interval labels
+    plt.xticks(intervals, interval_labels)  
     plt.tight_layout()
 
-    plt.savefig("gender_distribution_over_time.png")
+    plt.savefig("Met_gender_distribution_over_time.png")
     plt.show()
 
 def main():
     database_name = "Museums.db"
     data = get_data_from_database(database_name)
-    gender_distribution = process_data(data, interval=20)
+    gender_distribution, interval = process_data(data, 20)
     
-    write_data_to_text_file(gender_distribution)
+    write_data_to_csv_file(gender_distribution, interval)
     
-    plot_gender_distribution(gender_distribution)
+    plot_gender_distribution(gender_distribution, interval)
 
 if __name__ == "__main__":
     main()

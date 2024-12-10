@@ -5,7 +5,9 @@ import requests
 import sqlite3
 import random
 
-# get info for 25 paintings from the API
+# get info for paintings from the API
+# input: limit (the number of paintings to pull, auto-set to 25)
+# output: paintings (a list of paintings with information from API, each item in list is a painting)
 def get_paintings(limit=25):
     # set url
     url = "https://openaccess-api.clevelandart.org/api/artworks"
@@ -15,7 +17,7 @@ def get_paintings(limit=25):
     # set random skip value
     params = {'type': 'Painting', 'created_after': 1800, 'limit': limit, 'skip': random.randint(0, 823-limit)}
     
-    # initializes empty list for paintings to be returned
+    # initializes empty list for paintings to return
     paintings = []
     
     # sends request to API, collects data for 25 paintings from API
@@ -31,6 +33,8 @@ def get_paintings(limit=25):
     return paintings
 
 # set up the database
+# input: database_name (a string, the name of the database to open)
+# output: cur, conn (a cursor and connection to the database)
 def set_up_database(database_name):
     # set path, create conn and cur and return them
     path = os.path.dirname(os.path.abspath(__file__))
@@ -39,12 +43,17 @@ def set_up_database(database_name):
     return cur, conn
 
 # set up the Cleveland table
+# inputs: cur, conn (the cursor and connection to the database)
+# output: None
 def create_Cleveland_table(cur, conn):
     # create table if it doesn't exist
     # includes id_key, title, creation_year, main_artist
     cur.execute("CREATE TABLE IF NOT EXISTS Cleveland (id_key INTEGER PRIMARY KEY, title TEXT UNIQUE, creation_year INTEGER, artist_id INTEGER, department_id INTEGER)")
     return None
 
+# set up the Artist table
+# inputs: cur, conn
+# output: None
 def create_Cleveland_Artist_table(cur, conn):   
     # create table if it doesn't exist
     # includes id, artist
@@ -52,18 +61,13 @@ def create_Cleveland_Artist_table(cur, conn):
     conn.commit()
     return None
         
-# Create Departments Table
+# create Departments table
+# inputs: cur, conn
+# output: None
 def create_Cleveland_Departments_table(cur, conn):
-    d_list = []
-    for painting in get_paintings(823):
-        department = painting["department"]
-        if department not in d_list:
-            d_list.append(department)
     # create table if doesn't exist
     # includes id and department name
     cur.execute("CREATE TABLE IF NOT EXISTS Cleveland_Departments (id INTEGER PRIMARY KEY, department TEXT UNIQUE)")
-    for i in range(len(d_list)):
-        cur.execute("INSERT OR IGNORE INTO Cleveland_Departments (id, department) VALUES (?,?)", (i, d_list[i]))
     conn.commit()
     return None
 
@@ -96,15 +100,24 @@ def insert_paintings_into_Cleveland(paintings, cur, conn):
             result = cur.fetchone()
             if result:
                 artist_id = result[0]
+            # insert artist name into Artist table if doesn't exist yet
             else:
                 cur.execute("INSERT INTO Cleveland_Artists (artist) VALUES (?)", (re.findall(r'[\.\w\s-]+', painting['creators'][0]['description'])[0].strip(),))
                 artist_id = cur.lastrowid
         else:
             artist_id = None
         
+        # get department id from Department table
+        # if empty -> NULL
         if painting['department']:
             cur.execute("SELECT id FROM Cleveland_Departments WHERE department = ?", (painting['department'],))
-            department_id = cur.fetchone()[0]
+            result = cur.fetchone()
+            if result:
+                department_id = result[0]
+            # insert Department name into Department table if doesn't exist yet
+            else:
+                cur.execute("INSERT INTO Cleveland_Departments (department) VALUES (?)", (painting['department'],))
+                department_id = cur.lastrowid
         else:
             department_id = None
     
@@ -119,7 +132,7 @@ def insert_paintings_into_Cleveland(paintings, cur, conn):
             print(f"added painting title: '{title}' to database")
        
         # if insert was ignored, state reason for ignoring
-        # the painting will be ignored because its title is already in the database
+        # the painting will be ignored if its title is already in the database
         else:
             print(f"painting title: '{title}' already in database")
         
