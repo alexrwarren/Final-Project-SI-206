@@ -59,8 +59,8 @@ def write_counts_to_file(data_dict, filename):
     csv_writer = csv.writer(file)
     
     # write file header and column names
-    csv_writer.writerow([f"Department Frequencies for Paintings From the Cleveland Museum of Art"])
-    csv_writer.writerow(['Department', 'Frequency'])
+    csv_writer.writerow([f"Cleveland Museum of Art: Painting Frequency by Department"])
+    csv_writer.writerow(['Department', 'Number of Paintings'])
     
     # write a row for each department, frequency pair in list of words
     csv_writer.writerows(sorted_list)
@@ -87,8 +87,8 @@ def visualize_counts(data_dict):
     plt.figure(1, figsize=(20, 10))  
     plt.pie(totals, labels=departments, autopct='%1.1f%%', pctdistance=0.85, startangle = 90, wedgeprops={'width': 0.7})
     plt.legend(loc="best")
-    plt.title("Paintings by Department for Cleveland Museum of Art")  
-    plt.savefig("department_frequency.png")  
+    plt.title("Cleveland Museum of Art: Painting Frequency by Department")  
+    plt.savefig("Cleveland_department_frequency.png")  
     plt.show()  
     
     
