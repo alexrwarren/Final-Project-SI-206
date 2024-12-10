@@ -62,6 +62,8 @@ def create_harvard_table(cur, conn):
     return None
 
 # insert painting data into the database
+# inputs: list of painting entries from the API, cursor, connection to the database
+# output: list of new paintings added to the database
 def insert_paintings_into_harvard(paintings, cur, conn):
     
     # keeps track of paintings inserted into the table
