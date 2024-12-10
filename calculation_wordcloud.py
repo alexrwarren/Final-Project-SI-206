@@ -36,7 +36,7 @@ def get_words_from_database(table_names_lst, database_name):
         # extend the list of title words to the overall word list
         for title in titles:
             title_words = title.split()
-            stripped_words = [word.strip(' !,.:;[]\/?').lower() for word in title_words]
+            stripped_words = [word.strip(' /!,.:;[].?').lower() for word in title_words]
             words.extend(stripped_words)
     # return the word list of all title words
     return words
@@ -99,11 +99,11 @@ def write_to_csv_file(filename, word_dict, table_names_lst):
     csv_writer = csv.writer(file)
     
     # write file header and column names
-    csv_writer.writerow([f"Word frequencies for artwork titles from the {table_names_string} {table}"])
+    csv_writer.writerow([f"Frequency of Artwork Title Words From the {table_names_string} {table}: Top 20 Words"])
     csv_writer.writerow(['Word', 'Frequency'])
     
     # write a row for each word, frequency pair in list of words
-    csv_writer.writerows(sorted_list)
+    csv_writer.writerows(sorted_list[:20])
     
     # close the file
     file.close()
@@ -123,13 +123,17 @@ def visualize_word_cloud(word_dict, table_names_string, table):
         word_cloud = WordCloud(width=1000, height=500, background_color='white').generate_from_frequencies(frequencies=word_dict)
         
         # create the figure
-        plt.figure()
+        plt.figure(figsize=(10, 5))
         plt.imshow(word_cloud, interpolation="bicubic")
         
         # create title, turn off axis, save figure as png
-        plt.title(f"Frequencies of Artwork Title Words in the {table_names_string} {table.capitalize()}")
+        plt.title(f"Frequency of Artwork Title Words From the {table_names_string} {table.capitalize()}: All Words")
         plt.axis("off")
-        plt.savefig("wordcloud_of_title_words.png")
+        
+        plt.tight_layout()
+        
+        plt.savefig("allsources_wordcloud_of_title_words.png")
+        
         
         # show the figure
         plt.show()
@@ -140,12 +144,12 @@ def visualize_word_cloud(word_dict, table_names_string, table):
         exit()
     
 def main():
-    table_names_lst = ['Open_Library', 'Cleveland']
+    table_names_lst = ['Open_Library', 'Cleveland', 'Harvard', 'Met']
     words_lst = get_words_from_database(table_names_lst, 'Museums.db')
     #print(words_lst)
     words_dict = calculate_word_frequency(words_lst)
     #print(words_dict)
-    table_names_string, table = write_to_csv_file('word_frequencies_in_titles.csv', words_dict, table_names_lst)
+    table_names_string, table = write_to_csv_file('allsources_word_frequencies_in_titles.csv', words_dict, table_names_lst)
     visualize_word_cloud(words_dict, table_names_string, table)
 
 main()
