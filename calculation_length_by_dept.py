@@ -106,7 +106,7 @@ def visualize_averages_by_department(averages_dict):
     # save figure as a png image
     # show the figure
     plt.tight_layout()
-    plt.savefig("length_by_dept.png")
+    plt.savefig("Cleveland_length_by_dept.png")
     plt.show()
     
 def main():
