@@ -1,11 +1,13 @@
-import sqlite3
-import matplotlib.pyplot as plt
-import os
-import numpy as np
+# import python libraries needed
+
+import sqlite3                      # for connecting to a database
+import matplotlib.pyplot as plt     # for plots
+import os                           # for ensuring correct file paths
+import csv                          # for writing to a csv file
 
 def get_data(database):
-    path = os.path.dirname(os.path.abspath(__file__))
-    conn = sqlite3.connect(path + "/" + database)
+    path = os.path.dirname(os.path.abspath(__file__))           # establish path to database
+    conn = sqlite3.connect(path + "/" + database)               # establish connection
     cur = conn.cursor()
 
     cur.execute("""
@@ -69,10 +71,12 @@ def calculate_average_height(data):
 
 def plot_average_height(dist):
 
-    plt.figure(figsize= 10)
+    plt.figure(figsize= (10,6))
 
-    time_periods = list(dist.keys())
-    averages = list(dist.values())
+    sorted_tups = sorted(list(dist.items()), key = lambda x: x[0])
+
+    time_periods = [x[0] for x in sorted_tups]
+    averages = [x[1] for x in sorted_tups]
 
     plt.bar(time_periods, averages, color = ['red', 'orange', 'yellow', 'green', 'blue'])
 
@@ -80,17 +84,20 @@ def plot_average_height(dist):
     plt.ylabel('Painting Height in cm')
     plt.title('Average Painting Height Each Half-Century Since 1800')
     plt.legend()
-    plt.ticklabel_format(rotation = 45)
-
+    plt.xticks(rotation=45)
     plt.savefig('average_painting_height_in_cm.png')
     plt.show()
 
-
-def write_csv_file(filename, dist):
+def write_heights_to_csv_file(filename, dist):
     with open(filename, "w") as file:
-        file.write("Average Painting Height Each Half-Century Since 1800:\n")
-        for time_period, average in dist.items():
-            file.write(f"Average height for Harvard Art Museums' paintings made between {time_period}: {average} cm.\n")
+        csv_writer = csv.writer(file)
+        csv_writer.writerow(["Average Painting Height Each Half-Century Since 1800:"])
+
+        sorted_tups = sorted(list(dist.items()), key = lambda x: x[0])
+
+        for time_period, average in sorted_tups:
+            csv_writer.writerow([f"Average height for Harvard Art Museums' paintings made between {time_period}: {average} cm."])
+    file.close()
 
 def main():
     database = "Museums.db"
@@ -100,7 +107,7 @@ def main():
     height_distribution = calculate_average_height(data)
 
     # write txt file
-    write_csv_file('average_painting_height_in_cm', height_distribution)
+    write_heights_to_csv_file('average_painting_height_in_cm', height_distribution)
 
     # plot data
     plot_average_height(height_distribution)
