@@ -72,12 +72,13 @@ def calculate_average_height(data):
 def write_heights_to_csv_file(filename, dist):
     with open(filename, "w") as file:
         csv_writer = csv.writer(file)
-        csv_writer.writerow(["Average Painting Height Each Half-Century Since 1800:"])
+        csv_writer.writerow(["Harvard Art Museums: Average Painting Height (cm) by Date of Creation"])
+        csv_writer.writerow(['Painting Creation Date', 'Average Painting Height (in cm)'])
 
-        sorted_tups = sorted(list(dist.items()), key = lambda x: x[0]) # sort the dictionary by year range (1800 first, 2000 last)
+        sorted_tups = sorted(list(dist.items()), key = lambda x: x[0])
 
         for time_period, average in sorted_tups:
-            csv_writer.writerow([f"Average height for Harvard Art Museums' paintings made between {time_period}: {average} cm."])
+            csv_writer.writerow([time_period, average])
     file.close()
 
 
@@ -95,12 +96,10 @@ def plot_average_height(height_dist):
  
     plt.bar(time_periods, averages, edgecolor = 'black', color = ['red', 'orange', 'yellow', 'green', 'blue'])
 
-    # set labels + title
+    # set labels and title
     plt.xlabel('Painting Creation Date')
     plt.ylabel('Painting Height (cm)')
     plt.title("Harvard Art Museums: Average Painting Height (cm) by Date of Creation")
-    plt.legend()
-    plt.xticks(rotation=45)
     plt.tight_layout()
     plt.savefig('Harvard_average_painting_height_in_cm.png')
     plt.show()
