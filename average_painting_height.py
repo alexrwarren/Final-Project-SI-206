@@ -113,7 +113,7 @@ def main():
     height_distribution = calculate_average_height(data)
 
     # write csv file
-    write_heights_to_csv_file('average_painting_height_in_cm', height_distribution)
+    write_heights_to_csv_file('Harvard_average_painting_height_in_cm.csv', height_distribution)
 
     # plot data
     plot_average_height(height_distribution)
