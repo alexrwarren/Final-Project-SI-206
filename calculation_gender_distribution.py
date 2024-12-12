@@ -59,7 +59,7 @@ def write_data_to_csv_file(gender_distribution, interval):
         # write the heading and title
         writer = csv.writer(csvfile)
         writer.writerow(['The Metropolitan Museum of Art: Artist Gender Count by Creation Date of Artwork'])
-        writer.writerow(["Painting Creation Date", "Number of Male Painters", "Number of Female Painters"])
+        writer.writerow(["Painting Creation Date", "Number of Paintings by Male Artists", "Number of Paintings by Female Artists"])
         
         interval = interval
         
@@ -90,13 +90,13 @@ def plot_gender_distribution(gender_distribution, interval):
 
     # create a figure with two bar charts, one for female, one for male count
     plt.figure(figsize=(12, 6))
-    plt.bar(intervals, male_counts, width=8, label="Male Painters", alpha=0.7, color="blue")
-    plt.bar(intervals, female_counts, width=8, label="Female Painters", alpha=0.7, color="pink", bottom=male_counts)
+    plt.bar(intervals, male_counts, width=8, label="Paintings by Male Artists", alpha=0.7, color="blue")
+    plt.bar(intervals, female_counts, width=8, label="Paintings by Female Artists", alpha=0.7, color="pink", bottom=male_counts)
 
     # set axis labels and title
     plt.xlabel("Painting Creation Date")
-    plt.ylabel("Number of Painters")
-    plt.title("The Metropolitan Museum of Art: Artist Gender Count by Creation Date of Artwork")
+    plt.ylabel("Number of Paintings")
+    plt.title("The Metropolitan Museum of Art: Number of Paintings by Male and Female Artists by Creation Date of Artwork")
     
     # create a legend
     plt.legend()
