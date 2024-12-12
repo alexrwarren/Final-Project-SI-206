@@ -84,9 +84,10 @@ def visualize_counts(data_dict):
     # set the title 
     # save the figure
     # show the figure
+    # explode the wedges out to create distance between them
     plt.figure(1, figsize=(20, 10))  
-    plt.pie(totals, labels=departments, autopct='%1.1f%%', pctdistance=0.85, startangle = 90, wedgeprops={'width': 0.7})
-    plt.legend(loc="best")
+    plt.pie(totals, autopct='%1.1f%%', pctdistance=0.8, startangle = 0, labels = departments)
+    plt.tight_layout()
     plt.title("Cleveland Museum of Art: Painting Frequency by Department")  
     plt.savefig("Cleveland_department_frequency.png")  
     plt.show()  
