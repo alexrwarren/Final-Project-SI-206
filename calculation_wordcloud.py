@@ -4,6 +4,7 @@ import sqlite3
 import matplotlib.pyplot as plt
 import os
 import csv
+import re
 
 # get words from database
 # input: table_names (list of table names to get title words for)
@@ -35,9 +36,10 @@ def get_words_from_database(table_names_lst, database_name):
         # turn the string into a list of each word with punctuation stripped
         # extend the list of title words to the overall word list
         for title in titles:
-            title_words = title.split()
-            stripped_words = [word.strip(' /!,.:;[].?').lower() for word in title_words]
-            words.extend(stripped_words)
+            title_words = re.findall(r"\w+'*\w*", title)
+            title_words = [word.lower() for word in title_words]
+            print(title_words)
+            words.extend(title_words)
     # return the word list of all title words
     return words
 
