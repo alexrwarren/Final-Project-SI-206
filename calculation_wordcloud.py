@@ -38,7 +38,7 @@ def get_words_from_database(table_names_lst, database_name):
         for title in titles:
             title_words = re.findall(r"\w+'*\w*", title)
             title_words = [word.lower() for word in title_words]
-            print(title_words)
+            #print(title_words)
             words.extend(title_words)
     # return the word list of all title words
     return words
