@@ -76,7 +76,7 @@ def insert_paintings_into_harvard(paintings, cur, conn):
 
         # locate title
         if painting['title']:
-            title = re.findall(r"[^(]+", painting['title'])[0]     # use regex to find title
+            title = re.findall(r"[^(]+", painting['title'])[0].strip()     # use regex to find title
         else:
             title = None
 
