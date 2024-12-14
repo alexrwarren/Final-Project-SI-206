@@ -74,7 +74,7 @@ def insert_books_into_Open_Library(books, cur, conn):
         # get the title 
         # if title field empty, insert NULL
         if book['title']:
-            title = book['title']
+            title = book['title'].strip()
         else:
             title = None
         
